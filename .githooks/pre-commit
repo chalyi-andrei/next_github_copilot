@@ -1,0 +1,13 @@
+#!/bin/sh
+# Pre-commit hook: runs unit tests and aborts the commit if they fail.
+# Activated via: git config core.hooksPath .githooks (done by `npm install` -> prepare script)
+# Bypass in an emergency: git commit --no-verify
+
+echo "pre-commit: running unit tests (npm test)..."
+if ! npm test; then
+  echo "" >&2
+  echo "pre-commit: unit tests failed - commit aborted." >&2
+  echo "pre-commit: fix the tests, or bypass with 'git commit --no-verify'." >&2
+  exit 1
+fi
+echo "pre-commit: tests passed."

@@ -8,7 +8,10 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "prepare": "git config core.hooksPath .githooks || exit 0",
+    "office": "node scripts/office.mjs start",
+    "office:stop": "node scripts/office.mjs stop"
   },
   "dependencies": {
     "next": "16.0.6",

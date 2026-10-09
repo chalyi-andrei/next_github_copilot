@@ -102,7 +102,41 @@ npm run dev          # Start development server
 npm run build        # Build for production
 npm run start        # Start production server
 npm run lint         # Run ESLint
+npm test             # Run unit tests
+
+# Claude Office (agent visualizer)
+npm run office       # Start Claude Office in the background and open it
+npm run office:stop  # Stop Claude Office (ports 3333 and 3334)
+
+# Git hooks
+npm run prepare      # Point git at .githooks (runs automatically on npm install)
 ```
+
+### Claude Office (agent visualizer)
+
+`npm run office` starts the local [Claude-Office](https://github.com/W17ant/Claude-Office) checkout as background processes and opens the UI. Running it again is safe: services that are already up are not started twice.
+
+- **Location**: `~/Claude-Office` by default; override with the `CLAUDE_OFFICE_DIR` environment variable
+- **One-time setup**:
+
+  ```bash
+  git clone https://github.com/W17ant/Claude-Office ~/Claude-Office
+  cd ~/Claude-Office && npm install
+  ```
+
+- **URLs**: UI at [http://localhost:3333](http://localhost:3333), server at [http://localhost:3334](http://localhost:3334)
+- **Logs**: `~/.agent-office/server.log` and `~/.agent-office/vite.log`
+- **Without opening the browser**: `npm run office -- --no-open`
+
+### Git hooks
+
+The repository ships a dependency-free pre-commit hook in `.githooks/pre-commit`. It runs `npm test` before every commit and aborts the commit if any unit test fails.
+
+- **Activation**: automatic on `npm install` via the `prepare` script; to enable it manually run `git config core.hooksPath .githooks`
+- **Bypass once**: `git commit --no-verify`
+- **Disable**: `git config --unset core.hooksPath`
+
+The hook tests the working tree, not only the staged changes. Running `npm run lint` in the hook as well is a possible future extension.
 
 ## API Integration
 
