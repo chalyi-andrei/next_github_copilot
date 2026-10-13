@@ -8,8 +8,13 @@ A Next.js application that showcases popular AI coding assistants and tools. Bui
 
 - **Real-time API Integration**: Fetches data from GitHub API to show popular AI coding assistants
 - **Dynamic Ranking**: Displays repositories ranked by GitHub stars
-- **Multiple Categories**: Searches across different AI topics (coding assistants, code completion, programming AI tools)
-- **Responsive Cards**: Clean, modern UI showing repository details, stars, language, and descriptions
+- **Two Data Sources**: A curated list of well-known tools plus four GitHub topics (`coding-assistant`, `coding-agent`, `ai-coding-assistant`, `code-assistant`); "awesome" lists, books and guides found by topic are filtered out
+- **Search**: Filters the list by repository name, description or topic
+- **Language Filter**: Narrows the list to a single programming language
+- **Sorting**: By stars, forks or the most recent push
+- **Hide Inactive**: Hides archived repositories and ones without a push for more than a year; they are labelled `Archived` / `Inactive` otherwise
+- **Incomplete Data Warning**: A banner tells you when some GitHub requests failed and the list may be incomplete
+- **Responsive Cards**: Clean, modern UI showing repository details, stars, forks, open issues, language, license, last push and topics
 
 ### 🧭 Navigation
 
@@ -42,15 +47,15 @@ A Next.js application that showcases popular AI coding assistants and tools. Bui
 **About Page**
 
 - Application description
-- API integration details
-- Technology stack information
+- How the Statistics page uses the GitHub API
 
 ### /statistics
 
 **Statistics Page**
 
-- Top 10 AI coding assistants from GitHub
-- Real-time star counts and repository info
+- Up to 30 AI coding assistants from GitHub, ranked by stars
+- Search, language filter, sorting (Stars / Forks / Recently updated) and a "Hide inactive" switch
+- Star, fork and open issue counts, license, last push date and topics
 - Direct links to GitHub repositories
 - Language and description details
 
@@ -59,7 +64,7 @@ A Next.js application that showcases popular AI coding assistants and tools. Bui
 - **Framework**: Next.js 16 (App Router)
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
-- **APIs**: GitHub REST API (unlimited public access)
+- **APIs**: GitHub REST Search API (works without a token; see [API Integration](#api-integration) for rate limits)
 - **Deployment**: Ready for Vercel/Netlify
 
 ## Getting Started
@@ -67,7 +72,7 @@ A Next.js application that showcases popular AI coding assistants and tools. Bui
 ### Prerequisites
 
 ```bash
-Node.js 18+
+Node.js 20.9+
 npm or yarn or pnpm
 ```
 
@@ -94,6 +99,18 @@ npm run dev
 
 4. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
+### Environment Variables
+
+No configuration is required. Optionally, create `.env.local` in the project root to send an authenticated request to GitHub:
+
+```bash
+GITHUB_TOKEN=your_github_token
+```
+
+- **Effect**: raises the GitHub Search API limit from 10 to 30 requests per minute
+- **Scope**: server-side only; the token is never sent to the browser
+- **Git**: `.env*` files are listed in `.gitignore`, so the token is not committed
+
 ## Available Scripts
 
 ```bash
@@ -103,6 +120,7 @@ npm run build        # Build for production
 npm run start        # Start production server
 npm run lint         # Run ESLint
 npm test             # Run unit tests
+npm run test:watch   # Run unit tests in watch mode
 
 # Claude Office (agent visualizer)
 npm run office       # Start Claude Office in the background and open it
@@ -143,24 +161,39 @@ The hook tests the working tree, not only the staged changes. Running `npm run l
 The statistics page fetches data from GitHub's public API:
 
 - **Endpoint**: `https://api.github.com/search/repositories`
-- **Query**: Searches for repositories with AI-related topics
-- **Caching**: Server-side caching every hour for optimal performance
-- **Rate Limits**: Uses GitHub's generous public API limits
+- **Queries**: 5 requests per page regeneration, sent one by one: 1 for the curated repository list and 1 for each of the 4 topics
+- **Processing**: Results are merged, de-duplicated, filtered (lists, books and guides are dropped), sorted by stars and limited to 30 repositories
+- **Caching**: Server-side caching for 1 hour (ISR), so GitHub is not called on every visit
+- **Rate Limits**: The Search API allows 10 requests per minute without a token and 30 with the optional `GITHUB_TOKEN`
+- **Timeout**: Every request is aborted after 8 seconds
+- **Failures**: A failed request is logged on the server with `console.error`; the page shows the remaining data with a warning, or a fallback message when nothing could be loaded
+- **Avatars**: `next.config.ts` allows `avatars.githubusercontent.com` as a remote host for `next/image`
 
 ## Project Structure
 
 ```
 app/
-├── page.tsx            # Home page
+├── page.tsx               # Home page
 ├── about/
-│   └── page.tsx       # About page
+│   └── page.tsx           # About page
 ├── statistics/
-│   └── page.tsx       # Statistics with API integration
-├── globals.css        # Global styles
-├── layout.tsx         # Root layout
-└── favicon.ico        # App icon
+│   ├── page.tsx           # Statistics page (server component)
+│   ├── RepoExplorer.tsx   # Search, filters and sorting (client component)
+│   └── github.ts          # GitHub API data layer
+├── components/
+│   ├── MainNav.tsx        # Shared top navigation
+│   └── PageShell.tsx      # Shared page frame
+├── globals.css            # Global styles
+├── layout.tsx             # Root layout
+└── favicon.ico            # App icon
 
-public/                  # Static assets
+__tests__/                 # Unit tests (Vitest + React Testing Library)
+scripts/
+└── office.mjs             # Claude Office launcher
+.githooks/
+└── pre-commit             # Runs unit tests before every commit
+public/                    # Static assets
+next.config.ts             # Next.js config (allowed image hosts)
 ```
 
 ## Deployment

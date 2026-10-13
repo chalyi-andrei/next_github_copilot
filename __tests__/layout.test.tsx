@@ -5,7 +5,10 @@ import RootLayout, { metadata } from "../app/layout";
 describe("Root layout", () => {
   it("exports page metadata", () => {
     expect(metadata).toEqual({
-      title: "Next GitHub Copilot",
+      title: {
+        default: "Next GitHub Copilot",
+        template: "%s | Next GitHub Copilot",
+      },
       description: "Home, About and Statistics pages",
     });
   });

@@ -25,8 +25,10 @@ export function expectMainNavigation(activeName: NavItem) {
 
     if (item.name === activeName) {
       expect(link).toHaveClass("font-bold");
+      expect(link).toHaveAttribute("aria-current", "page");
     } else {
       expect(link).not.toHaveClass("font-bold");
+      expect(link).not.toHaveAttribute("aria-current");
     }
   }
 
